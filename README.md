@@ -2,6 +2,16 @@
 
 A WordPress plugin that imports posts and media from an Instagram "Download Your Information" ZIP archive into your WordPress site.
 
+## Screenshots
+
+The plugin registers itself in **Tools → Import** alongside the built-in WordPress importers:
+
+![Tools → Import: Instagram entry](docs/screenshots/import-option.png)
+
+After clicking **Run Importer**, upload your Instagram export ZIP:
+
+![Import Instagram: upload form](docs/screenshots/import-instagram.png)
+
 ## What it does
 
 - Creates one WordPress post per Instagram post.
