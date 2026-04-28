@@ -46,6 +46,8 @@ class Instagram_Importer extends WP_Importer {
 	private $imported_media = 0;
 	/** @var int */
 	private $failed_media = 0;
+	/** @var int */
+	private $imported_comments = 0;
 
 	/** @var int */
 	private $author_id = 0;
@@ -75,11 +77,12 @@ class Instagram_Importer extends WP_Importer {
 	 * @return array{posts:int,media:int,failed:int}|\WP_Error
 	 */
 	public function run_import( string $file_path ) {
-		$this->imported_posts = 0;
-		$this->imported_media = 0;
-		$this->failed_media   = 0;
-		$this->media_cache    = array();
-		$this->zip_prefix     = '';
+		$this->imported_posts    = 0;
+		$this->imported_media    = 0;
+		$this->failed_media      = 0;
+		$this->imported_comments = 0;
+		$this->media_cache       = array();
+		$this->zip_prefix        = '';
 
 		if ( ! class_exists( 'ZipArchive' ) ) {
 			return new WP_Error( 'instagram_no_ziparchive', __( 'PHP\'s ZipArchive extension is required to import Instagram archives.', 'instagram-importer' ) );
@@ -124,9 +127,10 @@ class Instagram_Importer extends WP_Importer {
 		$zip->close();
 
 		return array(
-			'posts'  => $this->imported_posts,
-			'media'  => $this->imported_media,
-			'failed' => $this->failed_media,
+			'posts'    => $this->imported_posts,
+			'media'    => $this->imported_media,
+			'failed'   => $this->failed_media,
+			'comments' => $this->imported_comments,
 		);
 	}
 
@@ -171,11 +175,12 @@ class Instagram_Importer extends WP_Importer {
 				echo '<h2>' . esc_html__( 'All done.', 'instagram-importer' ) . '</h2>';
 				echo '<p>';
 				printf(
-					/* translators: 1: post count, 2: media count, 3: failed media count. */
-					esc_html__( 'Imported %1$d post(s) and %2$d media file(s). %3$d media file(s) failed to import.', 'instagram-importer' ),
+					/* translators: 1: post count, 2: media count, 3: failed media count, 4: comment count. */
+					esc_html__( 'Imported %1$d post(s), %2$d media file(s), and %4$d comment(s). %3$d media file(s) failed to import.', 'instagram-importer' ),
 					(int) $result['posts'],
 					(int) $result['media'],
-					(int) $result['failed']
+					(int) $result['failed'],
+					(int) $result['comments']
 				);
 				echo '</p>';
 				echo '<p><a href="' . esc_url( admin_url( 'edit.php' ) ) . '">' . esc_html__( 'View your imported posts', 'instagram-importer' ) . '</a></p>';
@@ -196,8 +201,8 @@ class Instagram_Importer extends WP_Importer {
 
 	private function greet(): void {
 		echo '<div class="narrow">';
-		echo '<p>' . esc_html__( 'Howdy! Upload your Instagram "Download Your Information" ZIP archive and we\'ll create one WordPress post per Instagram post. Carousels become gallery blocks, hashtags become tags, and @mentions are linked to instagram.com.', 'instagram-importer' ) . '</p>';
-		echo '<p>' . esc_html__( 'Stories, reels, profile photos, comments and saved items are not imported.', 'instagram-importer' ) . '</p>';
+		echo '<p>' . esc_html__( 'Howdy! Upload your Instagram "Download Your Information" ZIP archive and we\'ll create one WordPress post per Instagram post. Carousels become gallery blocks, hashtags become tags, @mentions are linked to instagram.com, and comments are imported as WordPress comments with author names linked to their Instagram profiles.', 'instagram-importer' ) . '</p>';
+		echo '<p>' . esc_html__( 'Stories, reels, profile photos, and saved items are not imported.', 'instagram-importer' ) . '</p>';
 		wp_import_upload_form( add_query_arg( 'step', 1 ) );
 		echo '</div>';
 	}
@@ -288,13 +293,15 @@ class Instagram_Importer extends WP_Importer {
 		list( $caption_block, $hashtags ) = $this->parse_caption( $caption );
 		$media_block                      = $this->build_media_block( $uploaded );
 
-		$content = trim( $caption_block . "\n\n" . $media_block );
+		$content = $media_block;
+		$excerpt = $this->build_excerpt( $caption );
 		$title   = $this->build_post_title( $caption, $timestamp );
 		$date    = $this->format_post_date( $timestamp );
 
 		if ( $this->dry_run ) {
 			++$this->imported_posts;
-			$this->log( sprintf( '[dry-run] Would import "%s" with %d media item(s).', $title, count( $uploaded ) ), 'info' );
+			$dry_comments = count( $this->extract_comments_from_entry( $post_entry ) );
+			$this->log( sprintf( '[dry-run] Would import "%s" with %d media item(s) and %d comment(s).', $title, count( $uploaded ), $dry_comments ), 'info' );
 			return;
 		}
 
@@ -302,6 +309,7 @@ class Instagram_Importer extends WP_Importer {
 			array(
 				'post_title'    => $title,
 				'post_content'  => $content,
+				'post_excerpt'  => $excerpt,
 				'post_status'   => 'publish',
 				'post_type'     => 'post',
 				'post_author'   => $this->author_id,
@@ -338,8 +346,13 @@ class Instagram_Importer extends WP_Importer {
 			);
 		}
 
+		$comments = $this->extract_comments_from_entry( $post_entry );
+		if ( ! empty( $comments ) ) {
+			$this->import_post_comments( (int) $post_id, $comments, $timestamp );
+		}
+
 		++$this->imported_posts;
-		$this->log( sprintf( 'Imported "%s"', $title ), 'success' );
+		$this->log( sprintf( 'Imported "%s" (%d comment(s))', $title, count( $comments ) ), 'success' );
 	}
 
 	/**
@@ -551,6 +564,15 @@ class Instagram_Importer extends WP_Importer {
 		return array( $paragraph, $hashtags );
 	}
 
+	private function build_excerpt( string $caption ): string {
+		$text = trim( $caption );
+		if ( '' === $text ) {
+			return '';
+		}
+		$text = (string) preg_replace( '/(^|\s)#[\p{L}\p{N}_]+/u', '$1', $text );
+		return trim( (string) preg_replace( '/\s+/u', ' ', $text ) );
+	}
+
 	private function build_post_title( string $caption, int $timestamp ): string {
 		$caption = trim( $caption );
 		if ( '' !== $caption ) {
@@ -573,6 +595,140 @@ class Instagram_Importer extends WP_Importer {
 		}
 		$offset = (float) get_option( 'gmt_offset', 0 );
 		return gmdate( 'Y-m-d H:i:s', $timestamp + (int) ( $offset * HOUR_IN_SECONDS ) );
+	}
+
+	/**
+	 * Pull comments out of a post entry, handling multiple Instagram export formats.
+	 *
+	 * @return array<int, array{author:string,text:string,timestamp:int}>
+	 */
+	private function extract_comments_from_entry( array $post_entry ): array {
+		$comments = array();
+
+		// Format A: { "comments": { "comments": [ … ] } }
+		if ( isset( $post_entry['comments']['comments'] ) && is_array( $post_entry['comments']['comments'] ) ) {
+			$source = $post_entry['comments']['comments'];
+		// Format B: { "comments": [ … ] }
+		} elseif ( isset( $post_entry['comments'] ) && is_array( $post_entry['comments'] ) ) {
+			$source = $post_entry['comments'];
+		} else {
+			return array();
+		}
+
+		foreach ( $source as $raw ) {
+			if ( ! is_array( $raw ) ) {
+				continue;
+			}
+			$normalized = $this->normalize_comment( $raw );
+			if ( null !== $normalized ) {
+				$comments[] = $normalized;
+			}
+		}
+
+		return $comments;
+	}
+
+	/**
+	 * Normalize a raw comment array from any known Instagram export variant.
+	 *
+	 * @return array{author:string,text:string,timestamp:int}|null
+	 */
+	private function normalize_comment( array $c ): ?array {
+		$author    = '';
+		$text      = '';
+		$timestamp = 0;
+
+		// Flat fields used by older exports.
+		if ( isset( $c['author'] ) && is_string( $c['author'] ) ) {
+			$author = $c['author'];
+		}
+		if ( isset( $c['value'] ) && is_string( $c['value'] ) ) {
+			$text = $c['value'];
+		} elseif ( isset( $c['text'] ) && is_string( $c['text'] ) ) {
+			$text = $c['text'];
+		}
+		if ( isset( $c['creation_timestamp'] ) ) {
+			$timestamp = (int) $c['creation_timestamp'];
+		} elseif ( isset( $c['timestamp'] ) ) {
+			$timestamp = (int) $c['timestamp'];
+		}
+
+		// string_list_data format: author in 'title', text + ts in the data list.
+		if ( isset( $c['string_list_data'] ) && is_array( $c['string_list_data'] ) ) {
+			if ( '' === $author && isset( $c['title'] ) && is_string( $c['title'] ) ) {
+				$author = $c['title'];
+			}
+			foreach ( $c['string_list_data'] as $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+				if ( '' === $text && isset( $item['value'] ) && is_string( $item['value'] ) ) {
+					$text = $item['value'];
+				}
+				if ( 0 === $timestamp && isset( $item['timestamp'] ) ) {
+					$timestamp = (int) $item['timestamp'];
+				}
+			}
+		}
+
+		// string_map_data format used in newer exports.
+		if ( isset( $c['string_map_data'] ) && is_array( $c['string_map_data'] ) ) {
+			if ( '' === $author && isset( $c['title'] ) && is_string( $c['title'] ) ) {
+				$author = $c['title'];
+			}
+			$map = $c['string_map_data'];
+			if ( '' === $text && isset( $map['Comment']['value'] ) && is_string( $map['Comment']['value'] ) ) {
+				$text = $map['Comment']['value'];
+			}
+			if ( 0 === $timestamp && isset( $map['Comment']['timestamp'] ) ) {
+				$timestamp = (int) $map['Comment']['timestamp'];
+			}
+		}
+
+		if ( '' === $author || '' === $text ) {
+			return null;
+		}
+
+		return array(
+			'author'    => $this->fix_mojibake( $author ),
+			'text'      => $this->fix_mojibake( $text ),
+			'timestamp' => $timestamp,
+		);
+	}
+
+	/**
+	 * Insert each extracted comment as a WordPress comment on $post_id.
+	 * The comment author name becomes a link to the commenter's Instagram profile
+	 * via comment_author_url, which most themes render as a hyperlink.
+	 *
+	 * @param array<int, array{author:string,text:string,timestamp:int}> $comments
+	 */
+	private function import_post_comments( int $post_id, array $comments, int $post_timestamp ): void {
+		foreach ( $comments as $comment ) {
+			$ts       = $comment['timestamp'] > 0 ? $comment['timestamp'] : $post_timestamp;
+			$date     = $this->format_post_date( $ts );
+			$date_gmt = $ts > 0 ? gmdate( 'Y-m-d H:i:s', $ts ) : get_gmt_from_date( $date );
+
+			$comment_id = wp_insert_comment(
+				array(
+					'comment_post_ID'    => $post_id,
+					'comment_author'     => $comment['author'],
+					'comment_author_url' => self::INSTAGRAM_BASE_URL . rawurlencode( $comment['author'] ) . '/',
+					'comment_content'    => $comment['text'],
+					'comment_date'       => $date,
+					'comment_date_gmt'   => $date_gmt,
+					'comment_approved'   => 1,
+					'comment_type'       => 'comment',
+					'comment_author_IP'  => '',
+					'comment_agent'      => 'Instagram Importer',
+					'user_id'            => 0,
+				)
+			);
+
+			if ( $comment_id && ! is_wp_error( $comment_id ) ) {
+				++$this->imported_comments;
+			}
+		}
 	}
 
 	private function fix_mojibake( string $string ): string {

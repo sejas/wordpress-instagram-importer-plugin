@@ -1,5 +1,5 @@
 === Instagram Importer ===
-Contributors: sejas
+Contributors: sejas, mrfoxtalbot
 Tags: importer, instagram, migration, posts, media
 Requires at least: 6.0
 Tested up to: 6.5
@@ -28,14 +28,15 @@ What is **not** imported:
 * Profile photos
 * Comments and saved items
 
-The first image in each post is set as the featured image. All extracted media is stored in your site's media library.
+The first image in each post is set as the featured image. The post description is added as the excerpt. All extracted media is stored in your site's media library.
 
 == How to get your Instagram export ==
 
 1. Open Instagram → Settings → Accounts Center → Your information and permissions → Download your information.
 2. Choose **JSON** format (this importer does not read HTML exports).
-3. Select **Posts** (other surfaces are ignored by the importer).
-4. Wait for the email from Instagram, download the ZIP, and upload it via Tools → Import → Instagram in your WordPress admin.
+3. Select **Posts** (other items are ignored by the importer).
+4. Select the desired **date range**.
+5. Wait for the email from Instagram, download the ZIP, and upload it via Tools → Import → Instagram in your WordPress admin.
 
 == Installation ==
 
@@ -47,7 +48,7 @@ The first image in each post is set as the featured image. All extracted media i
 
 = My ZIP is huge — will this work? =
 
-The importer raises PHP's time and memory limits while running, but very large exports (thousands of posts and gigabytes of media) may still hit server limits. Try splitting the ZIP, or run on a host that allows long-running scripts.
+The importer raises PHP's time and memory limits while running, but very large exports (thousands of posts and gigabytes of media) may still hit server limits. Try splitting the ZIP by requesting multiple output files, each for a different time period, or run on a host that allows long-running scripts.
 
 = Do I need to keep the ZIP after importing? =
 
