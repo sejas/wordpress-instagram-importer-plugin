@@ -2,9 +2,9 @@
 /**
  * Plugin Name: Instagram Importer
  * Plugin URI: https://github.com/sejas/instagram-importer
- * Description: Import posts and media from an Instagram "Download Your Information" ZIP export into your WordPress site. Carousels become galleries, hashtags become tags, and @mentions become links to instagram.com.
- * Version: 0.1.0
- * Author: Antonio Sejas
+ * Description: Import posts, media, and comments from an Instagram "Download Your Information" ZIP export into your WordPress site. Carousels become galleries, hashtags become tags, @mentions become links to instagram.com, and comments are imported with dates preserved and author names linked to Instagram profiles. Post descriptions are imported as the title and the excerpt. The Post content only includes, images, galleries or videos.
+ * Version: 0.2.0
+ * Author: Antonio Sejas & Alvaro Gómez
  * Author URI: https://sejas.com
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'INSTAGRAM_IMPORTER_VERSION', '0.1.0' );
+define( 'INSTAGRAM_IMPORTER_VERSION', '0.2.0' );
 define( 'INSTAGRAM_IMPORTER_PLUGIN_FILE', __FILE__ );
 define( 'INSTAGRAM_IMPORTER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 

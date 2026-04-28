@@ -20,10 +20,11 @@ After clicking **Run Importer**, upload your Instagram export ZIP:
 - `@mentions` become anchor tags pointing at `https://www.instagram.com/<handle>/`.
 - Original creation timestamps are preserved (adjusted for your site's timezone).
 - The first image in each post becomes the featured image.
+- **Comments** are imported as WordPress comments, attached to their corresponding post, with the original timestamp preserved. The comment author's name links to their `https://www.instagram.com/<username>/` profile. Handles all known Instagram JSON comment formats (`string_list_data`, `string_map_data`, and flat fields).
 
 ## What it does NOT do
 
-- Does not import Stories, Reels (non-feed), profile photos, comments, or saved items.
+- Does not import Stories, Reels (non-feed), profile photos, or saved items.
 - Does not work with the **HTML** export format — only the **JSON** format.
 
 ## Install
@@ -64,6 +65,7 @@ The importer extends WordPress's built-in `WP_Importer` class and registers itse
    - Applies tags via `wp_set_post_tags()`.
    - Sets the first image as the featured image.
    - Reparents the attachments to the new post.
+   - Imports any comments via `wp_insert_comment()`, preserving timestamps and linking author names to Instagram profiles.
 4. Deletes the uploaded ZIP attachment when finished.
 
 No external services are contacted — everything runs locally on your WordPress install.

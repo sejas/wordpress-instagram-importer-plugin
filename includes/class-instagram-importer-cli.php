@@ -125,10 +125,11 @@ class Instagram_Importer_CLI extends WP_CLI_Command {
 
 		WP_CLI::success(
 			sprintf(
-				'%sImported %d post(s) and %d media file(s). %d media file(s) failed.',
+				'%sImported %d post(s), %d media file(s), and %d comment(s). %d media file(s) failed.',
 				$dry_run ? '[dry-run] ' : '',
 				(int) $result['posts'],
 				(int) $result['media'],
+				(int) ( $result['comments'] ?? 0 ),
 				(int) $result['failed']
 			)
 		);
