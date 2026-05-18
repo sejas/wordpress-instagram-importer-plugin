@@ -41,14 +41,23 @@ After clicking **Run Importer**, upload your Instagram export ZIP:
 3. Select **Posts**.
 4. Wait for the email, download the ZIP, upload it to WordPress.
 
+## WP-CLI
+
+```
+wp instagram-importer import ~/Downloads/instagram-export.zip --user=antonio
+wp instagram-importer import ~/Downloads/instagram-export.zip --dry-run
+```
+
 ## Architecture
 
 ```
 instagram-importer/
-├── instagram-importer.php          # Plugin header + register_importer() hook
+├── instagram-importer.php              # Plugin header + register_importer() hook
 ├── includes/
-│   └── class-instagram-importer.php # WP_Importer subclass: greet → upload → import
-└── readme.txt                      # WordPress plugin readme
+│   ├── class-instagram-importer.php        # Instagram_Importer: greet → upload → import
+│   ├── class-instagram-importer-cli.php    # Instagram_Importer_CLI: WP-CLI command
+│   └── class-instagram-video-processor.php # Instagram_Video_Processor: thumbnails + VideoPress
+└── readme.txt                          # WordPress plugin readme
 ```
 
 The importer extends WordPress's built-in `WP_Importer` class and registers itself with `register_importer()` so it appears at **Tools → Import** alongside the WordPress, Blogger, Tumblr, etc. importers.
@@ -72,7 +81,7 @@ No external services are contacted — everything runs locally on your WordPress
 
 ## Caveats
 
-- Large exports may hit PHP `max_execution_time` or `memory_limit` even though the plugin raises both. Run on a host that permits long-running admin scripts, or split the ZIP.
+- Large exports may hit PHP `memory_limit` even though the plugin raises it. Run on a host that permits long-running admin scripts, or split the ZIP.
 - Instagram's JSON export sometimes stores captions as UTF-8 bytes re-encoded as Latin-1 ("mojibake", e.g. `Ã±` instead of `ñ`). The importer detects and repairs this.
 - Featured image selection picks the first image (carousel order). If the order matters, re-sort the gallery in the editor after import.
 

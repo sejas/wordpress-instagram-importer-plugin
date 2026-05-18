@@ -81,9 +81,8 @@ class Instagram_Importer_CLI extends WP_CLI_Command {
 
 		$author_id = $this->resolve_author_id( $assoc_args['user'] ?? null );
 
-		// Raise PHP limits — large exports take time.
-		@set_time_limit( 0 );
-		@ini_set( 'memory_limit', '1024M' );
+		// Raise memory limit for large exports.
+		wp_raise_memory_limit( 'admin' );
 
 		$importer = new Instagram_Importer();
 		$importer->set_author_id( $author_id );

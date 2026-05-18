@@ -3,7 +3,7 @@
  * Plugin Name: Instagram Importer
  * Plugin URI: https://github.com/sejas/instagram-importer
  * Description: Import posts, media, and comments from an Instagram "Download Your Information" ZIP export into your WordPress site. Carousels become galleries, hashtags become tags, @mentions become links to instagram.com, and comments are imported with dates preserved and author names linked to Instagram profiles. Post descriptions are imported as the title and the excerpt. The Post content only includes, images, galleries or videos.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Author: Antonio Sejas & Alvaro Gómez
  * Author URI: https://sejas.com
  * License: GPL-2.0-or-later
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'INSTAGRAM_IMPORTER_VERSION', '0.2.0' );
+define( 'INSTAGRAM_IMPORTER_VERSION', '0.3.0' );
 define( 'INSTAGRAM_IMPORTER_PLUGIN_FILE', __FILE__ );
 define( 'INSTAGRAM_IMPORTER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -46,6 +46,7 @@ function instagram_importer_register(): void {
 		return;
 	}
 
+	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-video-processor.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer.php';
 
 	$importer = new Instagram_Importer();
@@ -60,18 +61,17 @@ function instagram_importer_register(): void {
 add_action( 'admin_init', 'instagram_importer_register' );
 
 /**
- * Bump PHP limits while running the importer. Large exports with many media
- * files take time to process; a short timeout will abort mid-flight.
+ * Bump memory limit while running the importer. Large exports with many media
+ * files take time to process; a short limit will abort mid-flight.
  */
 function instagram_importer_raise_limits(): void {
 	if ( ! is_admin() ) {
 		return;
 	}
-	if ( ! isset( $_GET['import'] ) || 'instagram' !== $_GET['import'] ) {
+	if ( ! isset( $_GET['import'] ) || 'instagram' !== sanitize_key( wp_unslash( $_GET['import'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page routing, no data mutation
 		return;
 	}
-	@set_time_limit( 0 );
-	@ini_set( 'memory_limit', '512M' );
+	wp_raise_memory_limit( 'admin' );
 }
 add_action( 'admin_init', 'instagram_importer_raise_limits', 1 );
 
@@ -80,6 +80,7 @@ add_action( 'admin_init', 'instagram_importer_raise_limits', 1 );
  * regular front-end / admin requests don't pay the cost.
  */
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-video-processor.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer-cli.php';
 }

@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WP_Importer' ) ) {
-	$wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
-	if ( file_exists( $wp_importer ) ) {
-		require_once $wp_importer;
+	$instagram_importer_wp_importer_path = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+	if ( file_exists( $instagram_importer_wp_importer_path ) ) {
+		require_once $instagram_importer_wp_importer_path;
 	}
 }
 
@@ -211,8 +211,8 @@ class Instagram_Importer extends WP_Importer {
 	 * Default logger for the admin UI: emits paragraphs and flushes.
 	 */
 	public function html_log( string $message, string $level = 'info' ): void {
-		$class = 'info' === $level ? '' : ' class="notice notice-' . esc_attr( $level === 'warn' ? 'warning' : $level ) . '"';
-		echo '<p' . $class . '>' . esc_html( $message ) . '</p>';
+		$notice_class = 'info' === $level ? '' : ' class="notice notice-' . esc_attr( 'warn' === $level ? 'warning' : $level ) . '"';
+		echo '<p' . $notice_class . '>' . esc_html( $message ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $notice_class is pre-built with esc_attr
 		$this->flush_output();
 	}
 
@@ -328,11 +328,29 @@ class Instagram_Importer extends WP_Importer {
 			wp_set_post_tags( (int) $post_id, $hashtags, false );
 		}
 
-		// Make the first media item the featured image when it's an image.
+		// Make the first image the featured image.
+		$has_thumbnail = false;
 		foreach ( $uploaded as $m ) {
 			if ( 0 === strpos( $m['mime'], 'image/' ) ) {
 				set_post_thumbnail( (int) $post_id, (int) $m['id'] );
+				$has_thumbnail = true;
 				break;
+			}
+		}
+
+		// For video-only posts: extract the first frame as featured image and
+		// upload each video to VideoPress when available.
+		if ( class_exists( 'Instagram_Video_Processor' ) ) {
+			$video_processor = new Instagram_Video_Processor();
+			foreach ( $uploaded as $m ) {
+				if ( 0 !== strpos( $m['mime'], 'video/' ) ) {
+					continue;
+				}
+				$thumb_id = $video_processor->process( (int) $m['id'], (int) $post_id );
+				if ( $thumb_id && ! $has_thumbnail ) {
+					set_post_thumbnail( (int) $post_id, $thumb_id );
+					$has_thumbnail = true;
+				}
 			}
 		}
 
@@ -388,9 +406,9 @@ class Instagram_Importer extends WP_Importer {
 			return 0;
 		}
 
-		$written = @file_put_contents( $tmp, $bytes );
+		$written = @file_put_contents( $tmp, $bytes ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === $written ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 			return 0;
 		}
 
@@ -405,7 +423,7 @@ class Instagram_Importer extends WP_Importer {
 
 		$attachment_id = media_handle_sideload( $file_array, 0 );
 		if ( file_exists( $tmp ) ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 		}
 		if ( is_wp_error( $attachment_id ) ) {
 			return 0;
