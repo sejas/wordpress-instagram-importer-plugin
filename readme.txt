@@ -1,5 +1,5 @@
 === Own Your Memories ===
-Contributors: sejas, mrfoxtalbot, antoniosejas
+Contributors: mrfoxtalbot, antoniosejas
 Tags: importer, migration, posts, media, memories
 Requires at least: 6.0
 Tested up to: 6.9
