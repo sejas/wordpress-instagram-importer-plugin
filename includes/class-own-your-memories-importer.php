@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WP_Importer' ) ) {
-	$wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
-	if ( file_exists( $wp_importer ) ) {
-		require_once $wp_importer;
+	$oym_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+	if ( file_exists( $oym_wp_importer ) ) {
+		require_once $oym_wp_importer;
 	}
 }
 
@@ -211,8 +211,12 @@ class Own_Your_Memories_Importer extends WP_Importer {
 	 * Default logger for the admin UI: emits paragraphs and flushes.
 	 */
 	public function html_log( string $message, string $level = 'info' ): void {
-		$class = 'info' === $level ? '' : ' class="notice notice-' . esc_attr( $level === 'warn' ? 'warning' : $level ) . '"';
-		echo '<p' . $class . '>' . esc_html( $message ) . '</p>';
+		if ( 'info' === $level ) {
+			echo '<p>' . esc_html( $message ) . '</p>';
+		} else {
+			$class = 'notice notice-' . ( 'warn' === $level ? 'warning' : $level );
+			echo '<p class="' . esc_attr( $class ) . '">' . esc_html( $message ) . '</p>';
+		}
 		$this->flush_output();
 	}
 
@@ -390,7 +394,7 @@ class Own_Your_Memories_Importer extends WP_Importer {
 
 		$written = @file_put_contents( $tmp, $bytes );
 		if ( false === $written ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 			return 0;
 		}
 
@@ -405,7 +409,7 @@ class Own_Your_Memories_Importer extends WP_Importer {
 
 		$attachment_id = media_handle_sideload( $file_array, 0 );
 		if ( file_exists( $tmp ) ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 		}
 		if ( is_wp_error( $attachment_id ) ) {
 			return 0;

@@ -36,9 +36,9 @@ function own_your_memories_register(): void {
 	require_once ABSPATH . 'wp-admin/includes/import.php';
 
 	if ( ! class_exists( 'WP_Importer' ) ) {
-		$wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
-		if ( file_exists( $wp_importer ) ) {
-			require_once $wp_importer;
+		$oym_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+		if ( file_exists( $oym_wp_importer ) ) {
+			require_once $oym_wp_importer;
 		}
 	}
 
@@ -67,10 +67,13 @@ function own_your_memories_raise_limits(): void {
 	if ( ! is_admin() ) {
 		return;
 	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing check, no state mutation.
 	if ( ! isset( $_GET['import'] ) || 'own-your-memories' !== $_GET['import'] ) {
 		return;
 	}
+	// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need unbounded execution time.
 	@set_time_limit( 0 );
+	// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need extra memory.
 	@ini_set( 'memory_limit', '512M' );
 }
 add_action( 'admin_init', 'own_your_memories_raise_limits', 1 );

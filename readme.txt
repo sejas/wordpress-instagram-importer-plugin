@@ -2,7 +2,7 @@
 Contributors: sejas, mrfoxtalbot
 Tags: importer, migration, posts, media, memories
 Requires at least: 6.0
-Tested up to: 6.5
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 0.2.0
 License: GPLv2 or later
