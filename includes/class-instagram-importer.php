@@ -328,29 +328,11 @@ class Instagram_Importer extends WP_Importer {
 			wp_set_post_tags( (int) $post_id, $hashtags, false );
 		}
 
-		// Make the first image the featured image.
-		$has_thumbnail = false;
+		// Make the first media item the featured image when it's an image.
 		foreach ( $uploaded as $m ) {
 			if ( 0 === strpos( $m['mime'], 'image/' ) ) {
 				set_post_thumbnail( (int) $post_id, (int) $m['id'] );
-				$has_thumbnail = true;
 				break;
-			}
-		}
-
-		// For video-only posts: extract the first frame as featured image and
-		// upload each video to VideoPress when available.
-		if ( class_exists( 'Instagram_Video_Processor' ) ) {
-			$video_processor = new Instagram_Video_Processor();
-			foreach ( $uploaded as $m ) {
-				if ( 0 !== strpos( $m['mime'], 'video/' ) ) {
-					continue;
-				}
-				$thumb_id = $video_processor->process( (int) $m['id'], (int) $post_id );
-				if ( $thumb_id && ! $has_thumbnail ) {
-					set_post_thumbnail( (int) $post_id, $thumb_id );
-					$has_thumbnail = true;
-				}
 			}
 		}
 

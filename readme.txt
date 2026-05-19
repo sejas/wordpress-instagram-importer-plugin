@@ -4,7 +4,7 @@ Tags: importer, instagram, migration, posts, media
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,7 +28,7 @@ What is **not** imported:
 * Profile photos
 * Comments and saved items
 
-The first image in each post is set as the featured image. For video-only posts, a featured image is automatically extracted from the first frame (requires FFmpeg or PHP Imagick on the server). Videos are also uploaded to VideoPress when Jetpack or the standalone VideoPress plugin is active. All extracted media is stored in your site's media library.
+The first image in each post is set as the featured image. All extracted media is stored in your site's media library.
 
 == Recommended companion plugin ==
 
@@ -66,10 +66,6 @@ No. Instagram Importer is intended as a one-off migration tool to help you move 
 Stories and reels are intentionally skipped. If feed posts are missing, ensure you exported in **JSON** (not HTML) and selected the **Posts** category.
 
 == Changelog ==
-
-= 0.3.0 =
-* Video posts are now uploaded to VideoPress when Jetpack or the standalone VideoPress plugin is active.
-* Featured images are now automatically extracted from the first frame of video-only posts (requires FFmpeg or PHP Imagick).
 
 = 0.2.0 =
 * Added WP-CLI support (`wp instagram-importer import <zip>`).

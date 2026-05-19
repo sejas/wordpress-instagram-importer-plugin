@@ -46,7 +46,6 @@ function instagram_importer_register(): void {
 		return;
 	}
 
-	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-video-processor.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer.php';
 
 	$importer = new Instagram_Importer();
@@ -80,7 +79,6 @@ add_action( 'admin_init', 'instagram_importer_raise_limits', 1 );
  * regular front-end / admin requests don't pay the cost.
  */
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-video-processor.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer.php';
 	require_once INSTAGRAM_IMPORTER_PLUGIN_DIR . 'includes/class-instagram-importer-cli.php';
 }

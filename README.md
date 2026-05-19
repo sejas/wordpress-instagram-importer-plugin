@@ -55,8 +55,7 @@ instagram-importer/
 ├── instagram-importer.php              # Plugin header + register_importer() hook
 ├── includes/
 │   ├── class-instagram-importer.php        # Instagram_Importer: greet → upload → import
-│   ├── class-instagram-importer-cli.php    # Instagram_Importer_CLI: WP-CLI command
-│   └── class-instagram-video-processor.php # Instagram_Video_Processor: thumbnails + VideoPress
+│   └── class-instagram-importer-cli.php    # Instagram_Importer_CLI: WP-CLI command
 └── readme.txt                          # WordPress plugin readme
 ```
 
