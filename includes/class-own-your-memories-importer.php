@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WP_Importer' ) ) {
-	$oym_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
-	if ( file_exists( $oym_wp_importer ) ) {
-		require_once $oym_wp_importer;
+	$own_your_memories_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+	if ( file_exists( $own_your_memories_wp_importer ) ) {
+		require_once $own_your_memories_wp_importer;
 	}
 }
 
