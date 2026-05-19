@@ -392,7 +392,7 @@ class Own_Your_Memories_Importer extends WP_Importer {
 			return 0;
 		}
 
-		$written = @file_put_contents( $tmp, $bytes );
+		$written = @file_put_contents( $tmp, $bytes ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		if ( false === $written ) {
 			wp_delete_file( $tmp );
 			return 0;

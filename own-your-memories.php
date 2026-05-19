@@ -60,21 +60,17 @@ function own_your_memories_register(): void {
 add_action( 'admin_init', 'own_your_memories_register' );
 
 /**
- * Bump PHP limits while running the importer. Large exports with many media
- * files take time to process; a short timeout will abort mid-flight.
+ * Bump memory limit while running the importer. Large exports with many media
+ * files take time to process; a short limit will abort mid-flight.
  */
 function own_your_memories_raise_limits(): void {
 	if ( ! is_admin() ) {
 		return;
 	}
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing check, no state mutation.
-	if ( ! isset( $_GET['import'] ) || 'own-your-memories' !== $_GET['import'] ) {
+	if ( ! isset( $_GET['import'] ) || 'own-your-memories' !== sanitize_key( wp_unslash( $_GET['import'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page routing, no data mutation
 		return;
 	}
-	// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need unbounded execution time.
-	@set_time_limit( 0 );
-	// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need extra memory.
-	@ini_set( 'memory_limit', '512M' );
+	wp_raise_memory_limit( 'admin' );
 }
 add_action( 'admin_init', 'own_your_memories_raise_limits', 1 );
 

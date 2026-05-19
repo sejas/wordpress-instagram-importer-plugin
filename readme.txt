@@ -1,5 +1,5 @@
 === Own Your Memories ===
-Contributors: sejas, mrfoxtalbot
+Contributors: sejas, mrfoxtalbot, antoniosejas
 Tags: importer, migration, posts, media, memories
 Requires at least: 6.0
 Tested up to: 6.9
@@ -8,7 +8,7 @@ Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Import posts and media from an Instagram "Download Your Information" ZIP export into your WordPress site — own your memories.
+Import posts, media, and comments from an Instagram "Download Your Information" ZIP export into your WordPress site — own your memories.
 
 == Description ==
 
@@ -29,7 +29,11 @@ What is **not** imported:
 * Profile photos
 * Saved items
 
-The first image in each post is set as the featured image. The post description is added as the excerpt. All extracted media is stored in your site's media library.
+The first image in each post is set as the featured image. All extracted media is stored in your site's media library.
+
+== Recommended companion plugin ==
+
+Once your content is imported, check out [Featured Images, Galleries & Videos](https://wordpress.org/plugins/featured-images-gallery-video/). It provides a block that works just like Instagram's own post display: it automatically shows images, galleries, or videos based on each post's content — no manual configuration needed per post.
 
 == How to get your export ==
 
@@ -49,11 +53,15 @@ The first image in each post is set as the featured image. The post description 
 
 = My ZIP is huge — will this work? =
 
-The importer raises PHP's time and memory limits while running, but very large exports (thousands of posts and gigabytes of media) may still hit server limits. Try splitting the ZIP by requesting multiple output files, each for a different time period, or run on a host that allows long-running scripts.
+The importer raises PHP's memory limit while running, but very large exports (thousands of posts and gigabytes of media) may still hit server limits. Try splitting the ZIP, or run on a host that allows long-running admin scripts.
 
 = Do I need to keep the ZIP after importing? =
 
 No. The plugin deletes the uploaded ZIP from your media library after the import completes.
+
+= Will my new posts be imported automatically to my WordPress site? =
+
+No. Own Your Memories is a one-off migration tool to help you move your existing content into WordPress. Ongoing or automatic syncing of new posts is out of scope for this plugin.
 
 = Why are some posts missing? =
 
@@ -63,6 +71,7 @@ Stories and reels are intentionally skipped. If feed posts are missing, ensure y
 
 = 0.2.0 =
 * Rebranded to Own Your Memories.
+* Added WP-CLI support (`wp own-your-memories import <zip>`).
 * Import comments with timestamps and author profile links.
 * Use the caption as the post title and excerpt.
 

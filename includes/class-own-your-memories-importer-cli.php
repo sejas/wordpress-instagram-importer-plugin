@@ -81,11 +81,8 @@ class Own_Your_Memories_Importer_CLI extends WP_CLI_Command {
 
 		$author_id = $this->resolve_author_id( $assoc_args['user'] ?? null );
 
-		// Raise PHP limits — large exports take time.
-		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need unbounded execution time.
-		@set_time_limit( 0 );
-		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Large exports need extra memory.
-		@ini_set( 'memory_limit', '1024M' );
+		// Raise memory limit for large exports.
+		wp_raise_memory_limit( 'admin' );
 
 		$importer = new Own_Your_Memories_Importer();
 		$importer->set_author_id( $author_id );
