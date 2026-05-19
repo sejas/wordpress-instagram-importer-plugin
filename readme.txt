@@ -1,5 +1,5 @@
 === Instagram Importer ===
-Contributors: antoniosejas, mrfoxtalbot
+Contributors: mrfoxtalbot, antoniosejas
 Tags: importer, instagram, migration, posts, media
 Requires at least: 6.0
 Tested up to: 6.9
