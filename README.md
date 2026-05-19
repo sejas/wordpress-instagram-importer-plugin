@@ -10,7 +10,7 @@ The plugin registers itself in **Tools → Import** alongside the built-in WordP
 
 After clicking **Run Importer**, upload your export ZIP:
 
-![Own Your Memories: upload form](docs/screenshots/import-instagram.png)
+![Own Your Memories: upload form](docs/screenshots/instagram-importer.png)
 
 ## What it does
 
