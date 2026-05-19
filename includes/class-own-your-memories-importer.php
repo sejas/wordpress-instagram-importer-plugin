@@ -4,9 +4,9 @@
  * Importer) by dispatching through three steps: greet → upload → import.
  *
  * The actual import work lives in run_import() and is reusable from
- * the WP-CLI command (see class-instagram-importer-cli.php).
+ * the WP-CLI command (see class-own-your-memories-importer-cli.php).
  *
- * @package Instagram_Importer
+ * @package Own_Your_Memories
  */
 
 declare( strict_types = 1 );
@@ -16,9 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'WP_Importer' ) ) {
-	$instagram_importer_wp_importer_path = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
-	if ( file_exists( $instagram_importer_wp_importer_path ) ) {
-		require_once $instagram_importer_wp_importer_path;
+	$own_your_memories_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+	if ( file_exists( $own_your_memories_wp_importer ) ) {
+		require_once $own_your_memories_wp_importer;
 	}
 }
 
@@ -26,15 +26,15 @@ if ( ! class_exists( 'WP_Importer' ) ) {
 	return;
 }
 
-class Instagram_Importer extends WP_Importer {
+class Own_Your_Memories_Importer extends WP_Importer {
 
 	const POSTS_JSON_PATH_PATTERN = '#your_instagram_activity/media/posts_\d+\.json$#';
-	const INSTAGRAM_BASE_URL      = 'https://www.instagram.com/';
+	const SOURCE_PROFILE_BASE_URL = 'https://www.instagram.com/';
 
 	/** @var int Uploaded ZIP attachment ID (admin UI only). */
 	private $id = 0;
 
-	/** @var string Top-level prefix inside the ZIP, e.g. "instagram-username-…/" or "". */
+	/** @var string Top-level prefix inside the ZIP (varies per export). */
 	private $zip_prefix = '';
 
 	/** @var array<string, int> URI → attachment ID, dedupe identical media references. */
@@ -85,19 +85,19 @@ class Instagram_Importer extends WP_Importer {
 		$this->zip_prefix        = '';
 
 		if ( ! class_exists( 'ZipArchive' ) ) {
-			return new WP_Error( 'instagram_no_ziparchive', __( 'PHP\'s ZipArchive extension is required to import Instagram archives.', 'instagram-importer' ) );
+			return new WP_Error( 'oym_no_ziparchive', __( 'PHP\'s ZipArchive extension is required to import the archive.', 'own-your-memories' ) );
 		}
 
 		$zip    = new ZipArchive();
 		$opened = $zip->open( $file_path );
 		if ( true !== $opened || 0 === $zip->numFiles ) {
-			return new WP_Error( 'instagram_zip_open_failed', __( 'Could not open the ZIP archive.', 'instagram-importer' ) );
+			return new WP_Error( 'oym_zip_open_failed', __( 'Could not open the ZIP archive.', 'own-your-memories' ) );
 		}
 
 		$json_entries = $this->locate_posts_json_entries( $zip );
 		if ( empty( $json_entries ) ) {
 			$zip->close();
-			return new WP_Error( 'instagram_no_posts_json', __( 'No posts_*.json file was found in the archive. This does not look like an Instagram export.', 'instagram-importer' ) );
+			return new WP_Error( 'oym_no_posts_json', __( 'No posts_*.json file was found in the archive. This does not look like a supported export.', 'own-your-memories' ) );
 		}
 
 		if ( ! $this->author_id ) {
@@ -151,17 +151,17 @@ class Instagram_Importer extends WP_Importer {
 				check_admin_referer( 'import-upload' );
 				$file = wp_import_handle_upload();
 				if ( isset( $file['error'] ) ) {
-					echo '<p><strong>' . esc_html__( 'Sorry, there has been an error.', 'instagram-importer' ) . '</strong><br />';
+					echo '<p><strong>' . esc_html__( 'Sorry, there has been an error.', 'own-your-memories' ) . '</strong><br />';
 					echo esc_html( $file['error'] ) . '</p>';
 					break;
 				}
 				if ( ! isset( $file['file'], $file['id'] ) ) {
-					echo '<p><strong>' . esc_html__( 'Sorry, there has been an error.', 'instagram-importer' ) . '</strong></p>';
+					echo '<p><strong>' . esc_html__( 'Sorry, there has been an error.', 'own-your-memories' ) . '</strong></p>';
 					break;
 				}
 				$this->id = (int) $file['id'];
 
-				echo '<p>' . esc_html__( 'Importing your Instagram posts. This can take a while…', 'instagram-importer' ) . '</p>';
+				echo '<p>' . esc_html__( 'Importing your posts. This can take a while…', 'own-your-memories' ) . '</p>';
 				$this->flush_output();
 
 				$result = $this->run_import( (string) $file['file'] );
@@ -172,18 +172,18 @@ class Instagram_Importer extends WP_Importer {
 					break;
 				}
 
-				echo '<h2>' . esc_html__( 'All done.', 'instagram-importer' ) . '</h2>';
+				echo '<h2>' . esc_html__( 'All done.', 'own-your-memories' ) . '</h2>';
 				echo '<p>';
 				printf(
 					/* translators: 1: post count, 2: media count, 3: failed media count, 4: comment count. */
-					esc_html__( 'Imported %1$d post(s), %2$d media file(s), and %4$d comment(s). %3$d media file(s) failed to import.', 'instagram-importer' ),
+					esc_html__( 'Imported %1$d post(s), %2$d media file(s), and %4$d comment(s). %3$d media file(s) failed to import.', 'own-your-memories' ),
 					(int) $result['posts'],
 					(int) $result['media'],
 					(int) $result['failed'],
 					(int) $result['comments']
 				);
 				echo '</p>';
-				echo '<p><a href="' . esc_url( admin_url( 'edit.php' ) ) . '">' . esc_html__( 'View your imported posts', 'instagram-importer' ) . '</a></p>';
+				echo '<p><a href="' . esc_url( admin_url( 'edit.php' ) ) . '">' . esc_html__( 'View your imported posts', 'own-your-memories' ) . '</a></p>';
 				break;
 		}
 
@@ -192,7 +192,7 @@ class Instagram_Importer extends WP_Importer {
 
 	private function header(): void {
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__( 'Import Instagram', 'instagram-importer' ) . '</h1>';
+		echo '<h1>' . esc_html__( 'Own Your Memories', 'own-your-memories' ) . '</h1>';
 	}
 
 	private function footer(): void {
@@ -201,8 +201,8 @@ class Instagram_Importer extends WP_Importer {
 
 	private function greet(): void {
 		echo '<div class="narrow">';
-		echo '<p>' . esc_html__( 'Howdy! Upload your Instagram "Download Your Information" ZIP archive and we\'ll create one WordPress post per Instagram post. Carousels become gallery blocks, hashtags become tags, @mentions are linked to instagram.com, and comments are imported as WordPress comments with author names linked to their Instagram profiles.', 'instagram-importer' ) . '</p>';
-		echo '<p>' . esc_html__( 'Stories, reels, profile photos, and saved items are not imported.', 'instagram-importer' ) . '</p>';
+		echo '<p>' . esc_html__( 'Howdy! Upload your Instagram "Download Your Information" ZIP archive and we\'ll create one WordPress post per source post. Carousels become gallery blocks, hashtags become tags, @mentions are linked to the source profile, and comments are imported as WordPress comments with author names linked to their source profiles.', 'own-your-memories' ) . '</p>';
+		echo '<p>' . esc_html__( 'Stories, reels, profile photos, and saved items are not imported.', 'own-your-memories' ) . '</p>';
 		wp_import_upload_form( add_query_arg( 'step', 1 ) );
 		echo '</div>';
 	}
@@ -211,8 +211,12 @@ class Instagram_Importer extends WP_Importer {
 	 * Default logger for the admin UI: emits paragraphs and flushes.
 	 */
 	public function html_log( string $message, string $level = 'info' ): void {
-		$notice_class = 'info' === $level ? '' : ' class="notice notice-' . esc_attr( 'warn' === $level ? 'warning' : $level ) . '"';
-		echo '<p' . $notice_class . '>' . esc_html( $message ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $notice_class is pre-built with esc_attr
+		if ( 'info' === $level ) {
+			echo '<p>' . esc_html( $message ) . '</p>';
+		} else {
+			$class = 'notice notice-' . ( 'warn' === $level ? 'warning' : $level );
+			echo '<p class="' . esc_attr( $class ) . '">' . esc_html( $message ) . '</p>';
+		}
 		$this->flush_output();
 	}
 
@@ -554,7 +558,7 @@ class Instagram_Importer extends WP_Importer {
 			'/(^|\s)@([A-Za-z0-9_.]+)/u',
 			function ( array $m ): string {
 				$handle = $m[2];
-				$href   = self::INSTAGRAM_BASE_URL . rawurlencode( $handle ) . '/';
+				$href   = self::SOURCE_PROFILE_BASE_URL . rawurlencode( $handle ) . '/';
 				return $m[1] . '<a href="' . esc_url( $href ) . '">@' . esc_html( $handle ) . '</a>';
 			},
 			$escaped
@@ -586,7 +590,7 @@ class Instagram_Importer extends WP_Importer {
 			}
 		}
 		$date = $timestamp > 0 ? gmdate( 'Y-m-d', $timestamp ) : gmdate( 'Y-m-d' );
-		return 'Instagram post — ' . $date;
+		return 'Memory — ' . $date;
 	}
 
 	private function format_post_date( int $timestamp ): string {
@@ -598,7 +602,7 @@ class Instagram_Importer extends WP_Importer {
 	}
 
 	/**
-	 * Pull comments out of a post entry, handling multiple Instagram export formats.
+	 * Pull comments out of a post entry, handling multiple known export formats.
 	 *
 	 * @return array<int, array{author:string,text:string,timestamp:int}>
 	 */
@@ -629,7 +633,7 @@ class Instagram_Importer extends WP_Importer {
 	}
 
 	/**
-	 * Normalize a raw comment array from any known Instagram export variant.
+	 * Normalize a raw comment array from any known export variant.
 	 *
 	 * @return array{author:string,text:string,timestamp:int}|null
 	 */
@@ -698,7 +702,7 @@ class Instagram_Importer extends WP_Importer {
 
 	/**
 	 * Insert each extracted comment as a WordPress comment on $post_id.
-	 * The comment author name becomes a link to the commenter's Instagram profile
+	 * The comment author name becomes a link to the commenter's source profile
 	 * via comment_author_url, which most themes render as a hyperlink.
 	 *
 	 * @param array<int, array{author:string,text:string,timestamp:int}> $comments
@@ -713,14 +717,14 @@ class Instagram_Importer extends WP_Importer {
 				array(
 					'comment_post_ID'    => $post_id,
 					'comment_author'     => $comment['author'],
-					'comment_author_url' => self::INSTAGRAM_BASE_URL . rawurlencode( $comment['author'] ) . '/',
+					'comment_author_url' => self::SOURCE_PROFILE_BASE_URL . rawurlencode( $comment['author'] ) . '/',
 					'comment_content'    => $comment['text'],
 					'comment_date'       => $date,
 					'comment_date_gmt'   => $date_gmt,
 					'comment_approved'   => 1,
 					'comment_type'       => 'comment',
 					'comment_author_IP'  => '',
-					'comment_agent'      => 'Instagram Importer',
+					'comment_agent'      => 'Own Your Memories',
 					'user_id'            => 0,
 				)
 			);

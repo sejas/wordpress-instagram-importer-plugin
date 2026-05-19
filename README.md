@@ -1,26 +1,26 @@
-# Instagram Importer
+# Own Your Memories
 
-A WordPress plugin that imports posts and media from an Instagram "Download Your Information" ZIP archive into your WordPress site.
+A WordPress plugin that imports posts, media, and comments from an Instagram "Download Your Information" ZIP archive into your WordPress site — so you can own your memories.
 
 ## Screenshots
 
 The plugin registers itself in **Tools → Import** alongside the built-in WordPress importers:
 
-![Tools → Import: Instagram entry](docs/screenshots/import-option.png)
+![Tools → Import: Own Your Memories entry](docs/screenshots/import-option.png)
 
-After clicking **Run Importer**, upload your Instagram export ZIP:
+After clicking **Run Importer**, upload your export ZIP:
 
-![Import Instagram: upload form](docs/screenshots/import-instagram.png)
+![Own Your Memories: upload form](docs/screenshots/import-instagram.png)
 
 ## What it does
 
-- Creates one WordPress post per Instagram post.
+- Creates one WordPress post per source post.
 - Carousels become **core/gallery** blocks (or sequential image/video blocks for mixed media).
 - Hashtags from captions are mapped to WordPress **tags**.
 - `@mentions` become anchor tags pointing at `https://www.instagram.com/<handle>/`.
 - Original creation timestamps are preserved (adjusted for your site's timezone).
 - The first image in each post becomes the featured image.
-- **Comments** are imported as WordPress comments, attached to their corresponding post, with the original timestamp preserved. The comment author's name links to their `https://www.instagram.com/<username>/` profile. Handles all known Instagram JSON comment formats (`string_list_data`, `string_map_data`, and flat fields).
+- **Comments** are imported as WordPress comments, attached to their corresponding post, with the original timestamp preserved. The comment author's name links to their `https://www.instagram.com/<username>/` profile. Handles all known JSON comment formats (`string_list_data`, `string_map_data`, and flat fields).
 
 ## What it does NOT do
 
@@ -29,12 +29,12 @@ After clicking **Run Importer**, upload your Instagram export ZIP:
 
 ## Install
 
-1. Copy this directory into `wp-content/plugins/instagram-importer` on your site.
-2. Activate **Instagram Importer** in **Plugins**.
-3. Go to **Tools → Import → Instagram**.
+1. Copy this directory into `wp-content/plugins/own-your-memories` on your site.
+2. Activate **Own Your Memories** in **Plugins**.
+3. Go to **Tools → Import → Own Your Memories**.
 4. Upload your `instagram-<username>-<date>-<hash>.zip`.
 
-## How to get your Instagram export
+## How to get your export
 
 1. Instagram app → Settings → Accounts Center → Your information and permissions → **Download your information**.
 2. Choose **JSON** format.
@@ -44,19 +44,23 @@ After clicking **Run Importer**, upload your Instagram export ZIP:
 ## WP-CLI
 
 ```
-wp instagram-importer import ~/Downloads/instagram-export.zip --user=antonio
-wp instagram-importer import ~/Downloads/instagram-export.zip --dry-run
+wp own-your-memories import <zip> [--user=<user>] [--dry-run] [--quiet]
+
+# Examples
+wp own-your-memories import ~/Downloads/instagram-export.zip --user=antonio
+wp own-your-memories import ~/Downloads/instagram-export.zip --dry-run
 ```
 
 ## Architecture
 
 ```
-instagram-importer/
-├── instagram-importer.php              # Plugin header + register_importer() hook
+own-your-memories/
+├── own-your-memories.php                          # Plugin header + register_importer() hook
 ├── includes/
-│   ├── class-instagram-importer.php        # Instagram_Importer: greet → upload → import
-│   └── class-instagram-importer-cli.php    # Instagram_Importer_CLI: WP-CLI command
-└── readme.txt                          # WordPress plugin readme
+│   ├── class-own-your-memories-importer.php       # WP_Importer subclass: greet → upload → import
+│   └── class-own-your-memories-importer-cli.php   # WP-CLI command
+├── uninstall.php                                  # Uninstall handler (no-op)
+└── readme.txt                                     # WordPress plugin readme
 ```
 
 The importer extends WordPress's built-in `WP_Importer` class and registers itself with `register_importer()` so it appears at **Tools → Import** alongside the WordPress, Blogger, Tumblr, etc. importers.
@@ -73,15 +77,15 @@ The importer extends WordPress's built-in `WP_Importer` class and registers itse
    - Applies tags via `wp_set_post_tags()`.
    - Sets the first image as the featured image.
    - Reparents the attachments to the new post.
-   - Imports any comments via `wp_insert_comment()`, preserving timestamps and linking author names to Instagram profiles.
+   - Imports any comments via `wp_insert_comment()`, preserving timestamps and linking author names to their source profiles.
 4. Deletes the uploaded ZIP attachment when finished.
 
 No external services are contacted — everything runs locally on your WordPress install.
 
 ## Caveats
 
-- Large exports may hit PHP `memory_limit` even though the plugin raises it. Run on a host that permits long-running admin scripts, or split the ZIP.
-- Instagram's JSON export sometimes stores captions as UTF-8 bytes re-encoded as Latin-1 ("mojibake", e.g. `Ã±` instead of `ñ`). The importer detects and repairs this.
+- Large exports may hit PHP `memory_limit` even though the plugin raises it via `wp_raise_memory_limit('admin')`. Run on a host that permits long-running admin scripts, or split the ZIP.
+- The JSON export sometimes stores captions as UTF-8 bytes re-encoded as Latin-1 ("mojibake", e.g. `Ã±` instead of `ñ`). The importer detects and repairs this.
 - Featured image selection picks the first image (carousel order). If the order matters, re-sort the gallery in the editor after import.
 
 ## License

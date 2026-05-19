@@ -1,8 +1,8 @@
 <?php
 /**
- * Uninstall handler for Instagram Importer.
+ * Uninstall handler for Own Your Memories.
  *
- * @package Instagram_Importer
+ * @package Own_Your_Memories
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {

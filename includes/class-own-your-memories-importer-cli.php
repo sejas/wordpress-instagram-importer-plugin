@@ -1,11 +1,11 @@
 <?php
 /**
- * WP-CLI command for Instagram Importer.
+ * WP-CLI command for Own Your Memories.
  *
  * Usage:
- *   wp instagram-importer import <zip> [--user=<user>] [--dry-run] [--quiet]
+ *   wp own-your-memories import <zip> [--user=<user>] [--dry-run] [--quiet]
  *
- * @package Instagram_Importer
+ * @package Own_Your_Memories
  */
 
 declare( strict_types = 1 );
@@ -18,22 +18,22 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 	return;
 }
 
-if ( ! class_exists( 'Instagram_Importer' ) ) {
-	require_once dirname( __FILE__ ) . '/class-instagram-importer.php';
+if ( ! class_exists( 'Own_Your_Memories_Importer' ) ) {
+	require_once dirname( __FILE__ ) . '/class-own-your-memories-importer.php';
 }
 
 /**
  * Imports Instagram "Download Your Information" archives from the command line.
  */
-class Instagram_Importer_CLI extends WP_CLI_Command {
+class Own_Your_Memories_Importer_CLI extends WP_CLI_Command {
 
 	/**
-	 * Imports posts and media from an Instagram export ZIP.
+	 * Imports posts and media from a source export ZIP.
 	 *
 	 * ## OPTIONS
 	 *
 	 * <zip>
-	 * : Path to the Instagram export ZIP archive on disk.
+	 * : Path to the export ZIP archive on disk.
 	 *
 	 * [--user=<user>]
 	 * : ID, login, or email of the user to attribute imported posts to.
@@ -49,10 +49,10 @@ class Instagram_Importer_CLI extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *   # Import an export, attributing posts to the user with login "antonio".
-	 *   wp instagram-importer import ~/Downloads/instagram-export.zip --user=antonio
+	 *   wp own-your-memories import ~/Downloads/instagram-export.zip --user=antonio
 	 *
 	 *   # See what would be imported without making any changes.
-	 *   wp instagram-importer import ~/Downloads/instagram-export.zip --dry-run
+	 *   wp own-your-memories import ~/Downloads/instagram-export.zip --dry-run
 	 *
 	 * @param array<int, string>  $args
 	 * @param array<string, string> $assoc_args
@@ -84,7 +84,7 @@ class Instagram_Importer_CLI extends WP_CLI_Command {
 		// Raise memory limit for large exports.
 		wp_raise_memory_limit( 'admin' );
 
-		$importer = new Instagram_Importer();
+		$importer = new Own_Your_Memories_Importer();
 		$importer->set_author_id( $author_id );
 		$importer->set_dry_run( $dry_run );
 		$importer->set_logger(
@@ -164,4 +164,4 @@ class Instagram_Importer_CLI extends WP_CLI_Command {
 	}
 }
 
-WP_CLI::add_command( 'instagram-importer', 'Instagram_Importer_CLI' );
+WP_CLI::add_command( 'own-your-memories', 'Own_Your_Memories_Importer_CLI' );
