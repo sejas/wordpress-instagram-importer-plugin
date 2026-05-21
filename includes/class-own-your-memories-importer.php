@@ -573,7 +573,6 @@ class Own_Your_Memories_Importer extends WP_Importer {
 		if ( '' === $text ) {
 			return '';
 		}
-		$text = (string) preg_replace( '/(^|\s)#[\p{L}\p{N}_]+/u', '$1', $text );
 		return trim( (string) preg_replace( '/\s+/u', ' ', $text ) );
 	}
 
