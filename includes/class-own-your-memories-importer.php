@@ -497,7 +497,7 @@ class Own_Your_Memories_Importer extends WP_Importer {
 				. '<figure class="wp-block-video"><video controls src="' . esc_url( $media['url'] ) . '"></video></figure>'
 				. "\n<!-- /wp:video -->";
 		}
-		return '<!-- wp:image {"id":' . (int) $media['id'] . ',"sizeSlug":"large","linkDestination":"none"} -->' . "\n"
+		return '<!-- wp:image {"id":' . (int) $media['id'] . ',"sizeSlug":"large","linkDestination":"none","lightbox":{"enabled":true}} -->' . "\n"
 			. '<figure class="wp-block-image size-large"><img src="' . esc_url( $media['url'] ) . '" alt="" class="wp-image-' . (int) $media['id'] . '"/></figure>'
 			. "\n<!-- /wp:image -->";
 	}
@@ -510,7 +510,7 @@ class Own_Your_Memories_Importer extends WP_Importer {
 		$inner = array();
 		foreach ( $uploaded as $m ) {
 			$ids[]   = (int) $m['id'];
-			$inner[] = '<!-- wp:image {"id":' . (int) $m['id'] . ',"sizeSlug":"large","linkDestination":"none"} -->' . "\n"
+			$inner[] = '<!-- wp:image {"id":' . (int) $m['id'] . ',"sizeSlug":"large","linkDestination":"none","lightbox":{"enabled":true}} -->' . "\n"
 				. '<figure class="wp-block-image size-large"><img src="' . esc_url( $m['url'] ) . '" alt="" class="wp-image-' . (int) $m['id'] . '"/></figure>'
 				. "\n<!-- /wp:image -->";
 		}

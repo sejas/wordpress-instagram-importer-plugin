@@ -1,7 +1,7 @@
 === Own Your Memories ===
 Contributors: mrfoxtalbot, antoniosejas
 Tags: importer, migration, posts, media, memories
-Requires at least: 6.0
+Requires at least: 6.4
 Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 0.2.0
